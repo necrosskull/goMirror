@@ -55,25 +55,21 @@ func main() {
 			}
 		}(resp.Body)
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Error().Err(err).Msg("Error reading response body")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 		for key, values := range resp.Header {
 			w.Header()[key] = values
 		}
 
 		w.WriteHeader(resp.StatusCode)
-		_, err = w.Write(body)
+
+		_, err = io.Copy(w, resp.Body)
 		if err != nil {
-			log.Error().Err(err).Msg("Error writing response body")
+			log.Error().Err(err).Msg("Error copying response body")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		log.Info().Int("status", resp.StatusCode).Msg("Outgoing response with")
+
 	})
 
 	err = http.ListenAndServe(":8085", nil)
