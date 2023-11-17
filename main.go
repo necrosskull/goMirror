@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"goMirror/cfg"
@@ -21,21 +22,21 @@ func main() {
 		return
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Str("method", r.Method).Str("url", r.URL.String()).Msg("Incoming request")
+	router := gin.Default()
 
-		query := strings.TrimPrefix(r.URL.Path, "/")
+	router.Any("/*path", func(c *gin.Context) {
+		query := strings.TrimPrefix(c.Request.URL.Path, "/")
 		targetURL := fmt.Sprintf("%s/%s", config.Url, query)
 
-		req, err := http.NewRequest(r.Method, targetURL, r.Body)
+		req, err := http.NewRequest(c.Request.Method, targetURL, c.Request.Body)
 		if err != nil {
 			log.Error().Err(err).Msg("Error creating request")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		req.Header = make(http.Header)
-		for key, values := range r.Header {
+		for key, values := range c.Request.Header {
 			req.Header[key] = values
 		}
 
@@ -43,7 +44,7 @@ func main() {
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Error().Err(err).Msg("Error making request to API")
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -56,23 +57,22 @@ func main() {
 		}(resp.Body)
 
 		for key, values := range resp.Header {
-			w.Header()[key] = values
+			c.Header(key, values[0])
 		}
 
-		w.WriteHeader(resp.StatusCode)
+		c.Status(resp.StatusCode)
 
-		_, err = io.Copy(w, resp.Body)
+		_, err = io.Copy(c.Writer, resp.Body)
 		if err != nil {
 			log.Error().Err(err).Msg("Error copying response body")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		log.Info().Int("status", resp.StatusCode).Msg("Outgoing response with")
+		resp.Body.Close()
+		c.Writer.Flush()
 
 	})
 
-	err = http.ListenAndServe(":8085", nil)
+	err = router.Run(":8085")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error starting server")
 		return
