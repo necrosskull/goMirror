@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"goMirror/cfg"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -26,6 +27,16 @@ func main() {
 
 	router.Any("/*path", func(c *gin.Context) {
 		query := strings.TrimPrefix(c.Request.URL.Path, "/")
+
+		// Получаем параметры из query
+		queryParams := c.Request.URL.Query()
+		queryString := queryParams.Encode()
+
+		// Если есть параметры, добавляем их к целевому URL
+		if queryString != "" {
+			query = fmt.Sprintf("%s?%s", query, queryString)
+		}
+
 		targetURL := fmt.Sprintf("%s/%s", config.Url, query)
 
 		req, err := http.NewRequest(c.Request.Method, targetURL, c.Request.Body)
