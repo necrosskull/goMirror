@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine
+FROM golang:1.22-alpine as builder
 
 WORKDIR /app
 
@@ -6,10 +6,12 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY . ./
+COPY . .
 
-RUN go build -o main main.go
+RUN go build -tags=jsoniter -o main main.go
 
-EXPOSE 8085
-
-CMD ["/app/main"]
+FROM alpine:latest
+WORKDIR /bin
+COPY --from=builder /app/main .
+# COPY --from=builder /app/.env .
+CMD [ "/bin/main" ]
