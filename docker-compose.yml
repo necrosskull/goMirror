@@ -1,6 +1,7 @@
 version: "3"
 services:
   go-proxy-api:
+    container_name: ${SERVICE_NAME}_proxy
     build:
       context: .
       dockerfile: Dockerfile
