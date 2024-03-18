@@ -2,12 +2,14 @@ package cfg
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Url string
+	Url  string
+	Port string
 }
 
 func LoadConfig() (*Config, error) {
@@ -16,7 +18,8 @@ func LoadConfig() (*Config, error) {
 	}
 
 	config := &Config{
-		Url: os.Getenv("URL"),
+		Url:  os.Getenv("URL"),
+		Port: os.Getenv("PORT"),
 	}
 
 	return config, nil

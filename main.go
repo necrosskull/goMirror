@@ -59,13 +59,12 @@ func main() {
 			return
 		}
 
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
+		defer func() {
+			err := resp.Body.Close()
 			if err != nil {
 				log.Error().Err(err).Msg("Error closing response body")
-				return
 			}
-		}(resp.Body)
+		}()
 
 		for key, values := range resp.Header {
 			c.Header(key, values[0])
@@ -78,12 +77,10 @@ func main() {
 			log.Error().Err(err).Msg("Error copying response body")
 			return
 		}
-		resp.Body.Close()
-		c.Writer.Flush()
-
 	})
+	log.Info().Msg("Server started on http://127.0.0.1:" + config.Port)
 
-	err = router.Run(":8085")
+	err = router.Run(":" + config.Port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error starting server")
 		return

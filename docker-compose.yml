@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 services:
   go-proxy-api:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:7373:8085"
+      - "127.0.0.1:${PORT}:${PORT}"
     env_file:
       - .env
     restart: unless-stopped
