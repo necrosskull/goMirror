@@ -13,6 +13,8 @@ type Config struct {
 	Port string
 }
 
+var Settings = &Config{}
+
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("No .env file found, using environment variables only")
@@ -39,4 +41,15 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return config, nil
+}
+
+func Init() {
+	config, err := LoadConfig()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	Settings.Port = config.Port
+	Settings.Url = config.Url
+
 }

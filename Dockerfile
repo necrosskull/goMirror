@@ -13,5 +13,4 @@ RUN go build -tags=jsoniter -o main main.go
 FROM alpine:latest
 WORKDIR /bin
 COPY --from=builder /app/main .
-# COPY --from=builder /app/.env .
 CMD [ "/bin/main" ]
